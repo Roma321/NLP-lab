@@ -41,7 +41,7 @@ def get_data():
 
 
 def get_squashed_data():
-    data = pd.read_csv('bbc-news-data.csv', delimiter='\t').sample(30)
+    data = pd.read_csv('bbc-news-data.csv', delimiter='\t')
     data['all_tokens'] = (data['title'] + data['content']).apply(lambda x: to_embedding(x))
     label_encoder = LabelEncoder()
     data['category'] = label_encoder.fit_transform(data['category'])
