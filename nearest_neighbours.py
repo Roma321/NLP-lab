@@ -4,6 +4,8 @@ from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import LabelEncoder
 from sklearn.neighbors import KNeighborsClassifier
 import torch
+import numpy as np
+from common import test
 
 
 def to_ids(x):
@@ -32,7 +34,7 @@ def to_embedding(x):
 
 
 num = 0
-mode = 'ids'
+mode = 'embeddings'
 
 data = pd.read_csv('bbc-news-data.csv', delimiter='\t')
 model_name = 'bert-base-uncased'
@@ -50,7 +52,7 @@ vals = data['all_tokens'].to_list()
 labels = data['category'].to_list()
 
 if mode == 'embeddings':
-    vals = [emb.view(-1).numpy() for emb in vals]
+    vals = [emb.view(-1).numpy().astype(np.float16) for emb in vals]
 if mode == 'ids':
     max_len = max(len(x) for x in vals)
 
@@ -67,41 +69,5 @@ classifier = KNeighborsClassifier(n_neighbors=8)
 classifier.fit(X_train, y_train)
 
 preds = classifier.predict(X_test)
-res = {
-    'business': {
-        'ok': 0,
-        'bad': 0,
-    },
-    'entertainment': {
-        'ok': 0,
-        'bad': 0,
-    },
-    'politics': {
-        'ok': 0,
-        'bad': 0,
-    },
-    'sport': {
-        'ok': 0,
-        'bad': 0,
-    },
-    'tech': {
-        'ok': 0,
-        'bad': 0,
-    }
-}
-ok = 0
-bad = 0
-matrix = [[0, 0, 0, 0, 0], [0, 0, 0, 0, 0], [0, 0, 0, 0, 0], [0, 0, 0, 0, 0], [0, 0, 0, 0, 0]]
-for pred, should_be in zip(preds, y_test):
-    if pred == should_be:
-        res[label_encoder.classes_[should_be]]['ok'] += 1
-        ok += 1
-    else:
-        res[label_encoder.classes_[should_be]]['bad'] += 1
-        bad += 1
-    matrix[should_be][pred] += 1
 
-print(label_encoder.classes_)
-print(res)
-print(matrix)
-print(ok / (ok + bad))
+test(preds, y_test, label_encoder)
