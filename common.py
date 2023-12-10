@@ -3,6 +3,7 @@ import torch
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import LabelEncoder
 from transformers import BertTokenizer, BertModel
+import numpy as np
 
 num = 0
 
@@ -36,6 +37,17 @@ def get_data():
     labels = data['category'].to_list()
     vals = data['all_tokens'].to_list()
     vals = [emb.view(-1).numpy() for emb in vals]
+    return train_test_split(vals, labels, test_size=0.20), label_encoder
+
+
+def get_squashed_data():
+    data = pd.read_csv('bbc-news-data.csv', delimiter='\t').sample(30)
+    data['all_tokens'] = (data['title'] + data['content']).apply(lambda x: to_embedding(x))
+    label_encoder = LabelEncoder()
+    data['category'] = label_encoder.fit_transform(data['category'])
+    labels = data['category'].to_list()
+    vals = data['all_tokens'].to_list()
+    vals = [np.sum(emb.numpy(), axis=0) for emb in vals]
     return train_test_split(vals, labels, test_size=0.20), label_encoder
 
 
